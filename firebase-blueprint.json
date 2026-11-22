@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "UserNotificationToken": {
+      "title": "UserNotificationToken",
+      "description": "FCM registration token and per-topic notification preferences for a signed-in user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the token owner."
+        },
+        "fcmToken": {
+          "type": "string",
+          "description": "Firebase Cloud Messaging device token (empty string if pending)."
+        },
+        "platform": {
+          "type": "string",
+          "description": "Client platform identifier (e.g., android)."
+        },
+        "liveEnabled": {
+          "type": "boolean",
+          "description": "Whether push notifications for live streams are enabled."
+        },
+        "videosEnabled": {
+          "type": "boolean",
+          "description": "Whether push notifications for new YouTube videos are enabled."
+        },
+        "socialEnabled": {
+          "type": "boolean",
+          "description": "Whether push notifications for new Instagram posts are enabled."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the document was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the document was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "fcmToken",
+        "platform",
+        "liveEnabled",
+        "videosEnabled",
+        "socialEnabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AppStatus": {
+      "title": "AppStatus",
+      "description": "Backend-managed status documents for live stream detection, latest video, and latest social highlight.",
+      "type": "object",
+      "properties": {
+        "liveActive": {
+          "type": "boolean",
+          "description": "Whether the YouTube channel is currently live."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the current live stream or latest item."
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Most recent YouTube video ID."
+        },
+        "link": {
+          "type": "string",
+          "description": "External URL for the item."
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Thumbnail or preview image URL."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last backend check."
+        }
+      }
+    },
+    "SocialPost": {
+      "title": "SocialPost",
+      "description": "Synced social media post from @cccristoreyve populated via webhook or backend sync.",
+      "type": "object",
+      "properties": {
+        "caption": {
+          "type": "string",
+          "description": "Post caption or summary text."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Image URL for the social post."
+        },
+        "postUrl": {
+          "type": "string",
+          "description": "Permalink to the original Instagram post."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Visibility flag for published community posts."
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "Formatted or ISO publication timestamp string."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when stored in Firestore."
+        }
+      },
+      "required": [
+        "caption",
+        "imageUrl",
+        "postUrl",
+        "published",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/tokens/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserNotificationToken"
+      },
+      "description": "Per-user FCM token and notification topic preferences keyed by Firebase Auth UID."
+    },
+    "/app_status/{statusId}": {
+      "schema": {
+        "$ref": "#/entities/AppStatus"
+      },
+      "description": "Read-only system status documents managed by Cloud Functions."
+    },
+    "/social_posts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/SocialPost"
+      },
+      "description": "Read-only published Instagram posts synced by Cloud Functions webhook."
+    }
+  }
+}

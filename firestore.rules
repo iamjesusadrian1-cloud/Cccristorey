@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidTokenDoc(data) {
+      return data.userId is string &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.fcmToken is string &&
+             data.fcmToken.size() <= 512 &&
+             data.platform is string &&
+             data.platform.size() >= 1 &&
+             data.platform.size() <= 32 &&
+             data.liveEnabled is bool &&
+             data.videosEnabled is bool &&
+             data.socialEnabled is bool;
+    }
+
+    // User FCM token and notification preferences (1:1 per authenticated user)
+    match /tokens/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'fcmToken', 'platform',
+                         'liveEnabled', 'videosEnabled', 'socialEnabled',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'fcmToken', 'platform',
+                         'liveEnabled', 'videosEnabled', 'socialEnabled',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidTokenDoc(incoming()) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time;
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidTokenDoc(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'fcmToken', 'platform',
+                         'liveEnabled', 'videosEnabled', 'socialEnabled',
+                         'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // Backend-managed status documents (live stream state, latest video, latest social highlight)
+    match /app_status/{statusId} {
+      allow get: if isSignedIn() && isValidId(statusId);
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // Backend-synced published social posts
+    match /social_posts/{postId} {
+      allow get: if isSignedIn() && isValidId(postId) && existing().published == true;
+      allow list: if isSignedIn() && existing().published == true;
+      allow create, update, delete: if false;
+    }
+  }
+}

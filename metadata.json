@@ -1,0 +1,6 @@
+{
+  "name": "Cristo Rey",
+  "description": "Aplicación oficial de Cristo Rey con transmisiones en vivo, videos recientes de YouTube, publicaciones de Instagram, notificaciones e información de la comunidad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
