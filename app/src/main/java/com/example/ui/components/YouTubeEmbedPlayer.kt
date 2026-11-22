@@ -3,7 +3,6 @@ package com.example.ui.components
 import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
@@ -55,18 +54,6 @@ import com.example.ui.theme.DeepNavy
 import com.example.ui.theme.PureWhite
 
 private const val TAG = "YouTubeEmbedPlayer"
-
-private fun isEmulatorEnvironment(): Boolean {
-    return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
-        Build.FINGERPRINT.startsWith("generic") ||
-        Build.FINGERPRINT.startsWith("unknown") ||
-        Build.HARDWARE.contains("goldfish") ||
-        Build.HARDWARE.contains("ranchu") ||
-        Build.MODEL.contains("Emulator") ||
-        Build.MODEL.contains("Android SDK built for") ||
-        Build.PRODUCT.contains("sdk") ||
-        Build.PRODUCT.contains("emulator")
-}
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -144,6 +131,7 @@ fun YouTubeEmbedPlayer(
                 }
             }
         } else {
+            var isDestroyed by remember(retryKey) { mutableStateOf(false) }
             val webView = remember(retryKey) {
                 WebView(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -151,8 +139,8 @@ fun YouTubeEmbedPlayer(
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                     setBackgroundColor(android.graphics.Color.parseColor("#0A1D3E"))
-                    if (isEmulatorEnvironment()) {
-                        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
                     }
                     settings.apply {
                         javaScriptEnabled = true
@@ -168,8 +156,11 @@ fun YouTubeEmbedPlayer(
 
             DisposableEffect(webView) {
                 onDispose {
-                    webView.stopLoading()
-                    webView.destroy()
+                    if (!isDestroyed) {
+                        isDestroyed = true
+                        webView.stopLoading()
+                        webView.destroy()
+                    }
                 }
             }
 
@@ -200,14 +191,17 @@ fun YouTubeEmbedPlayer(
                                 )
                                 isLoading = false
                                 rendererCrashed = true
-                                view?.destroy()
+                                if (!isDestroyed) {
+                                    isDestroyed = true
+                                    view?.destroy()
+                                }
                                 return true
                             }
                         }
                     }
                 },
                 update = { view ->
-                    if (view.tag != embedUrl) {
+                    if (!isDestroyed && view.tag != embedUrl) {
                         view.tag = embedUrl
                         isLoading = true
                         val html = """

@@ -1,12 +1,14 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.LiveTv
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,21 +34,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.CristoReyConfig
 import com.example.data.model.LiveStreamStatus
+import com.example.ui.components.CristoReyLogoBadge
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.YouTubeEmbedPlayer
+import com.example.ui.theme.BrightGold
+import com.example.ui.theme.DeepNavy
 import com.example.ui.theme.PureWhite
 import com.example.ui.theme.RoyalBlue
 import com.example.ui.theme.SacredGold
+import com.example.ui.theme.SanctuaryBlue
 
 @Composable
 fun EnVivoScreen(
@@ -55,6 +69,8 @@ fun EnVivoScreen(
     onOpenYouTubeLive: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var loadOfflinePlayer by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter
@@ -100,12 +116,74 @@ fun EnVivoScreen(
             }
 
             item {
-                YouTubeEmbedPlayer(
-                    embedUrl = liveStatus.embedUrl,
-                    fallbackWatchUrl = liveStatus.watchUrl,
-                    onOpenExternal = onOpenYouTubeLive,
-                    modifier = Modifier.testTag("live_youtube_iframe_player")
-                )
+                if (liveStatus.liveActive || loadOfflinePlayer) {
+                    YouTubeEmbedPlayer(
+                        embedUrl = liveStatus.embedUrl,
+                        fallbackWatchUrl = liveStatus.watchUrl,
+                        onOpenExternal = onOpenYouTubeLive,
+                        modifier = Modifier.testTag("live_youtube_iframe_player")
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f),
+                        shape = RoundedCornerShape(18.dp),
+                        border = BorderStroke(1.5.dp, BrightGold.copy(alpha = 0.7f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(DeepNavy, RoyalBlue, SanctuaryBlue)
+                                    )
+                                )
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                CristoReyLogoBadge(size = 56.dp)
+                                Text(
+                                    text = "Próximamente en Vivo",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = PureWhite,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "Domingos 9:00 AM y 11:30 AM • Miércoles 7:00 PM",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = BrightGold,
+                                    textAlign = TextAlign.Center
+                                )
+                                Button(
+                                    onClick = { loadOfflinePlayer = true },
+                                    modifier = Modifier.testTag("open_live_embed_button"),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = BrightGold,
+                                        contentColor = DeepNavy
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.PlayArrow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Cargar reproductor",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             item {

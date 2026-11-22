@@ -3,7 +3,6 @@ package com.example.ui.screens
 import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -68,17 +67,6 @@ import com.example.ui.theme.RoyalBlue
 import com.example.ui.theme.SacredGold
 
 private const val REDES_TAG = "RedesScreen"
-
-private fun isEmulatorForSocialWebView(): Boolean {
-    return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
-        Build.FINGERPRINT.startsWith("generic") ||
-        Build.FINGERPRINT.startsWith("unknown") ||
-        Build.HARDWARE.contains("goldfish") ||
-        Build.HARDWARE.contains("ranchu") ||
-        Build.MODEL.contains("Emulator") ||
-        Build.PRODUCT.contains("sdk") ||
-        Build.PRODUCT.contains("emulator")
-}
 
 @Composable
 fun RedesScreen(
@@ -344,14 +332,15 @@ private fun InstagramEmbedWebView(
                     }
                 }
             } else {
+                var isDestroyed by remember(retryKey) { mutableStateOf(false) }
                 val webView = remember(retryKey) {
                     WebView(context).apply {
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
-                        if (isEmulatorForSocialWebView()) {
-                            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
                         }
                         settings.apply {
                             javaScriptEnabled = true
@@ -365,8 +354,11 @@ private fun InstagramEmbedWebView(
 
                 DisposableEffect(webView) {
                     onDispose {
-                        webView.stopLoading()
-                        webView.destroy()
+                        if (!isDestroyed) {
+                            isDestroyed = true
+                            webView.stopLoading()
+                            webView.destroy()
+                        }
                     }
                 }
 
@@ -405,14 +397,17 @@ private fun InstagramEmbedWebView(
                                     )
                                     isLoading = false
                                     rendererCrashed = true
-                                    view?.destroy()
+                                    if (!isDestroyed) {
+                                        isDestroyed = true
+                                        view?.destroy()
+                                    }
                                     return true
                                 }
                             }
                         }
                     },
                     update = { view ->
-                        if (view.tag != url) {
+                        if (!isDestroyed && view.tag != url) {
                             view.tag = url
                             isLoading = true
                             view.loadUrl(url)
