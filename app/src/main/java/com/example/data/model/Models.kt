@@ -40,18 +40,6 @@ data class UserNotificationToken(
 
 @Keep
 @IgnoreExtraProperties
-data class SocialPost(
-    @DocumentId val id: String = "",
-    val caption: String = "",
-    val imageUrl: String = "",
-    val postUrl: String = "",
-    val published: Boolean = true,
-    val publishedAt: String = "",
-    @ServerTimestamp val createdAt: Timestamp? = null
-)
-
-@Keep
-@IgnoreExtraProperties
 data class AppStatusDoc(
     @DocumentId val id: String = "",
     val liveActive: Boolean = false,

@@ -4,7 +4,6 @@
     <string name="tab_home">Inicio</string>
     <string name="tab_live">En Vivo</string>
     <string name="tab_videos">Videos</string>
-    <string name="tab_social">Redes</string>
     <string name="tab_info">Info</string>
     <string name="welcome_subtitle">Comunidad Cristiana • Fe, Esperanza y Servicio</string>
     <string name="watch_live_cta">Ver en Vivo</string>
@@ -15,5 +14,5 @@
     <string name="sign_out">Cerrar sesión</string>
     <string name="about_title">Acerca de Cristo Rey</string>
     <string name="notifications_channel_name">Novedades de Cristo Rey</string>
-    <string name="notifications_channel_desc">Avisos de transmisiones en vivo, nuevos videos y publicaciones en redes.</string>
+    <string name="notifications_channel_desc">Avisos de transmisiones en vivo y nuevos videos.</string>
 </resources>

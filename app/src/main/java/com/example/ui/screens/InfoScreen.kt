@@ -74,7 +74,7 @@ fun InfoScreen(
     userDisplayName: String?,
     userEmail: String?,
     notificationPrefsState: UiState<UserNotificationToken?>,
-    onUpdateNotificationPrefs: (live: Boolean, videos: Boolean, social: Boolean) -> Unit,
+    onUpdateNotificationPrefs: (live: Boolean, videos: Boolean) -> Unit,
     onPermissionGrantedSync: () -> Unit,
     onOpenUrl: (String) -> Unit,
     onSignOut: () -> Unit,
@@ -205,14 +205,13 @@ fun InfoScreen(
                                 val prefs = notificationPrefsState.data
                                 val liveEnabled = prefs?.liveEnabled ?: true
                                 val videosEnabled = prefs?.videosEnabled ?: true
-                                val socialEnabled = prefs?.socialEnabled ?: true
 
                                 NotificationToggleRow(
                                     title = "Transmisiones en Vivo",
                                     subtitle = "Aviso inmediato al iniciar culto en vivo",
                                     checked = liveEnabled,
                                     onCheckedChange = { checked ->
-                                        onUpdateNotificationPrefs(checked, videosEnabled, socialEnabled)
+                                        onUpdateNotificationPrefs(checked, videosEnabled)
                                     },
                                     tag = "switch_notif_live"
                                 )
@@ -222,19 +221,9 @@ fun InfoScreen(
                                     subtitle = "Prédicas y mensajes en ${CristoReyConfig.YOUTUBE_HANDLE}",
                                     checked = videosEnabled,
                                     onCheckedChange = { checked ->
-                                        onUpdateNotificationPrefs(liveEnabled, checked, socialEnabled)
+                                        onUpdateNotificationPrefs(liveEnabled, checked)
                                     },
                                     tag = "switch_notif_videos"
-                                )
-                                HorizontalDivider()
-                                NotificationToggleRow(
-                                    title = "Redes Sociales",
-                                    subtitle = "Publicaciones nuevas de ${CristoReyConfig.INSTAGRAM_HANDLE}",
-                                    checked = socialEnabled,
-                                    onCheckedChange = { checked ->
-                                        onUpdateNotificationPrefs(liveEnabled, videosEnabled, checked)
-                                    },
-                                    tag = "switch_notif_social"
                                 )
                             }
                         }
@@ -268,28 +257,16 @@ fun InfoScreen(
                         HorizontalDivider()
                         InfoDetailRow(
                             icon = Icons.Filled.Email,
-                            title = "Contacto y Canales",
-                            body = "Correo: ${CristoReyConfig.CONTACT_EMAIL}\nYouTube: ${CristoReyConfig.YOUTUBE_HANDLE} • Instagram: ${CristoReyConfig.INSTAGRAM_HANDLE}"
+                            title = "Contacto y Canal",
+                            body = "Correo: ${CristoReyConfig.CONTACT_EMAIL}\nYouTube: ${CristoReyConfig.YOUTUBE_HANDLE}"
                         )
 
-                        Row(
+                        OutlinedButton(
+                            onClick = { onOpenUrl(CristoReyConfig.YOUTUBE_CHANNEL_URL) },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            OutlinedButton(
-                                onClick = { onOpenUrl(CristoReyConfig.YOUTUBE_CHANNEL_URL) },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("YouTube")
-                            }
-                            OutlinedButton(
-                                onClick = { onOpenUrl(CristoReyConfig.INSTAGRAM_PROFILE_URL) },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Instagram")
-                            }
+                            Text("Abrir canal en YouTube")
                         }
                     }
                 }

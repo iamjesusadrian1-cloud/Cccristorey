@@ -4,19 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -28,9 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,26 +36,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.example.R
 import com.example.data.CristoReyConfig
 import com.example.data.model.YouTubeVideo
 import com.example.ui.UiState
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.VideoItemCard
-import com.example.ui.components.YouTubeEmbedPlayer
 import com.example.ui.theme.SacredGold
 
 @Composable
 fun VideosScreen(
     videosState: UiState<List<YouTubeVideo>>,
-    selectedVideo: YouTubeVideo?,
-    onSelectVideo: (YouTubeVideo?) -> Unit,
+    onSelectVideo: (YouTubeVideo) -> Unit,
     onRefreshVideos: () -> Unit,
-    onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -220,79 +208,6 @@ fun VideosScreen(
                                 onPlayClick = { onSelectVideo(it) }
                             )
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    if (selectedVideo != null) {
-        Dialog(
-            onDismissRequest = { onSelectVideo(null) },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
-            Surface(
-                modifier = Modifier
-                    .widthIn(max = 720.dp)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = selectedVideo.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .padding(end = 48.dp)
-                        )
-                        IconButton(
-                            onClick = { onSelectVideo(null) },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .testTag("close_video_player_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Cerrar reproductor"
-                            )
-                        }
-                    }
-
-                    YouTubeEmbedPlayer(
-                        embedUrl = selectedVideo.embedUrl,
-                        fallbackWatchUrl = selectedVideo.watchUrl,
-                        onOpenExternal = onOpenUrl,
-                        modifier = Modifier.testTag("video_iframe_player")
-                    )
-
-                    Text(
-                        text = "Publicado el ${selectedVideo.formattedDate}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    OutlinedButton(
-                        onClick = { onOpenUrl(selectedVideo.watchUrl) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("open_video_in_youtube_button"),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(id = R.string.watch_on_youtube))
                     }
                 }
             }

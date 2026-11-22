@@ -2,7 +2,6 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.LiveTv
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,12 +28,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -45,13 +40,11 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.CristoReyConfig
 import com.example.data.model.LiveStreamStatus
-import com.example.data.model.SocialPost
 import com.example.data.model.YouTubeVideo
 import com.example.ui.UiState
 import com.example.ui.components.CristoReyLogoBadge
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SectionHeader
-import com.example.ui.components.SocialPostCard
 import com.example.ui.components.VideoItemCard
 import com.example.ui.theme.BrightGold
 import com.example.ui.theme.DeepNavy
@@ -64,12 +57,9 @@ import com.example.ui.theme.SanctuaryBlue
 fun InicioScreen(
     liveStatus: LiveStreamStatus,
     videosState: UiState<List<YouTubeVideo>>,
-    socialPostsState: UiState<List<SocialPost>>,
     onNavigateToLive: () -> Unit,
     onNavigateToVideos: () -> Unit,
-    onNavigateToSocial: () -> Unit,
     onPlayVideo: (YouTubeVideo) -> Unit,
-    onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -260,85 +250,6 @@ fun InicioScreen(
                                         )
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Latest Social Highlight Section
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SectionHeader(
-                        title = "Publicación Destacada",
-                        subtitle = "Instagram ${CristoReyConfig.INSTAGRAM_HANDLE}",
-                        trailing = {
-                            OutlinedButton(
-                                onClick = onNavigateToSocial,
-                                modifier = Modifier.testTag("home_see_social_button"),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                            ) {
-                                Text("Abrir Redes")
-                            }
-                        }
-                    )
-
-                    val latestSocial = (socialPostsState as? UiState.Success)?.data?.firstOrNull()
-                    if (latestSocial != null) {
-                        SocialPostCard(
-                            post = latestSocial,
-                            onOpenPost = onOpenUrl
-                        )
-                    } else {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(18.dp))
-                                .clickable { onNavigateToSocial() }
-                                .testTag("home_social_highlight_card"),
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            border = BorderStroke(1.dp, BrightGold.copy(alpha = 0.6f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(18.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(14.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.size(48.dp),
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Filled.PhotoLibrary,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                    }
-                                }
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "Síguenos en ${CristoReyConfig.INSTAGRAM_HANDLE}",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Text(
-                                        text = "Entérate de anuncios, eventos y devocionales diarios de nuestra comunidad.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = "Ir a Redes",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
                             }
                         }
                     }

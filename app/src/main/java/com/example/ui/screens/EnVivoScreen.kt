@@ -50,10 +50,10 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.CristoReyConfig
 import com.example.data.model.LiveStreamStatus
+import com.example.ui.components.CristoReyCustomPlayerCard
 import com.example.ui.components.CristoReyLogoBadge
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SectionHeader
-import com.example.ui.components.YouTubeEmbedPlayer
 import com.example.ui.theme.BrightGold
 import com.example.ui.theme.DeepNavy
 import com.example.ui.theme.PureWhite
@@ -117,9 +117,12 @@ fun EnVivoScreen(
 
             item {
                 if (liveStatus.liveActive || loadOfflinePlayer) {
-                    YouTubeEmbedPlayer(
-                        embedUrl = liveStatus.embedUrl,
-                        fallbackWatchUrl = liveStatus.watchUrl,
+                    CristoReyCustomPlayerCard(
+                        title = liveStatus.title,
+                        subtitle = "Transmisión oficial • ${CristoReyConfig.YOUTUBE_HANDLE}",
+                        isLive = true,
+                        embedUrlOverride = liveStatus.embedUrl,
+                        watchUrl = liveStatus.watchUrl,
                         onOpenExternal = onOpenYouTubeLive,
                         modifier = Modifier.testTag("live_youtube_iframe_player")
                     )

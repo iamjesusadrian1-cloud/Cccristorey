@@ -6,11 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.CristoReyConfig
 import com.example.data.model.AppStatusDoc
 import com.example.data.model.LiveStreamStatus
-import com.example.data.model.SocialPost
 import com.example.data.model.UserNotificationToken
 import com.example.data.model.YouTubeVideo
 import com.example.data.notifications.NotificationPreferencesRepository
-import com.example.data.social.SocialFeedRepository
 import com.example.data.youtube.YouTubeRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.CancellationException
@@ -33,7 +31,6 @@ sealed interface UiState<out T> {
 class CristoReyViewModel(
     private val currentUserId: String,
     private val youTubeRepository: YouTubeRepository,
-    private val socialFeedRepository: SocialFeedRepository,
     private val notificationRepository: NotificationPreferencesRepository
 ) : ViewModel() {
 
@@ -43,10 +40,6 @@ class CristoReyViewModel(
     private val _directLiveCheck = MutableStateFlow<Boolean?>(null)
     private val _isCheckingLive = MutableStateFlow(false)
     val isCheckingLive: StateFlow<Boolean> = _isCheckingLive.asStateFlow()
-
-    private val _aggregatorSocialPosts = MutableStateFlow<List<SocialPost>>(emptyList())
-    private val _isRefreshingSocial = MutableStateFlow(false)
-    val isRefreshingSocial: StateFlow<Boolean> = _isRefreshingSocial.asStateFlow()
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
@@ -106,42 +99,9 @@ class CristoReyViewModel(
             )
         )
 
-    private val firestoreSocialPosts: StateFlow<UiState<List<SocialPost>>> =
-        socialFeedRepository.observeFirestoreSocialPosts()
-            .map<List<SocialPost>, UiState<List<SocialPost>>> { UiState.Success(it) }
-            .catch { error ->
-                val firestoreError = generateSequence(error) { it.cause }
-                    .filterIsInstance<FirebaseFirestoreException>()
-                    .firstOrNull()
-                if (firestoreError == null && error is CancellationException) throw error
-                val rootError = firestoreError ?: error
-                Log.w(TAG, "Error observing Firestore social posts", rootError)
-                emit(UiState.Error(rootError.localizedMessage ?: "No se pudo cargar el feed social."))
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-                initialValue = UiState.Loading
-            )
-
-    val socialPostsState: StateFlow<UiState<List<SocialPost>>> =
-        combine(firestoreSocialPosts, _aggregatorSocialPosts) { firestoreState, aggregatorList ->
-            when {
-                aggregatorList.isNotEmpty() -> UiState.Success(aggregatorList)
-                firestoreState is UiState.Success -> UiState.Success(firestoreState.data)
-                firestoreState is UiState.Error -> firestoreState
-                else -> UiState.Loading
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = UiState.Loading
-        )
-
     init {
         refreshVideos()
         refreshLiveStatus()
-        refreshSocialFeed()
         syncFcmTokenOnStart()
     }
 
@@ -180,17 +140,6 @@ class CristoReyViewModel(
         }
     }
 
-    fun refreshSocialFeed() {
-        viewModelScope.launch {
-            _isRefreshingSocial.value = true
-            socialFeedRepository.fetchAggregatorFeed()
-                .onSuccess { posts ->
-                    _aggregatorSocialPosts.value = posts
-                }
-            _isRefreshingSocial.value = false
-        }
-    }
-
     fun syncFcmTokenOnStart() {
         viewModelScope.launch {
             val token = notificationRepository.fetchFcmTokenSafe()
@@ -203,15 +152,14 @@ class CristoReyViewModel(
 
     fun updateNotificationToggles(
         liveEnabled: Boolean,
-        videosEnabled: Boolean,
-        socialEnabled: Boolean
+        videosEnabled: Boolean
     ) {
         viewModelScope.launch {
             notificationRepository.updateNotificationPreferences(
                 userId = currentUserId,
                 liveEnabled = liveEnabled,
                 videosEnabled = videosEnabled,
-                socialEnabled = socialEnabled
+                socialEnabled = false
             ).onSuccess {
                 _statusMessage.value = "Preferencias de notificación guardadas."
             }.onFailure { err ->

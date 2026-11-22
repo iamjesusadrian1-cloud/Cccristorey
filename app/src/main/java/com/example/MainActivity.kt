@@ -27,12 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LiveTv
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LiveTv
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +48,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -77,17 +76,20 @@ import com.example.data.auth.authStateFlow
 import com.example.data.auth.signOut
 import com.example.data.model.YouTubeVideo
 import com.example.data.notifications.NotificationPreferencesRepository
-import com.example.data.social.SocialFeedRepository
 import com.example.data.youtube.YouTubeRepository
 import com.example.notifications.CristoReyMessagingService
 import com.example.ui.CristoReyViewModel
+import com.example.ui.UiState
 import com.example.ui.components.CristoReyLogoBadge
+import com.example.ui.components.CristoReyVideoPlayerOverlay
+import com.example.ui.components.FullscreenPlayerOverlay
+import com.example.ui.components.FullscreenPlayerState
 import com.example.ui.components.LiveStatusBadge
+import com.example.ui.components.LocalFullscreenPlayerState
 import com.example.ui.screens.AuthScreen
 import com.example.ui.screens.EnVivoScreen
 import com.example.ui.screens.InfoScreen
 import com.example.ui.screens.InicioScreen
-import com.example.ui.screens.RedesScreen
 import com.example.ui.screens.SplashOverlay
 import com.example.ui.screens.VideosScreen
 import com.example.ui.theme.BrightGold
@@ -127,13 +129,6 @@ enum class CristoReyTab(
         selectedIcon = Icons.Filled.VideoLibrary,
         unselectedIcon = Icons.Outlined.VideoLibrary,
         testTag = "nav_tab_videos"
-    ),
-    REDES(
-        routeKey = "social",
-        labelRes = R.string.tab_social,
-        selectedIcon = Icons.Filled.PhotoLibrary,
-        unselectedIcon = Icons.Outlined.PhotoLibrary,
-        testTag = "nav_tab_social"
     ),
     INFO(
         routeKey = "info",
@@ -230,7 +225,6 @@ private fun CristoReyAuthenticatedApp(
                 CristoReyViewModel(
                     currentUserId = currentUserId,
                     youTubeRepository = YouTubeRepository(),
-                    socialFeedRepository = SocialFeedRepository(db = db, auth = auth),
                     notificationRepository = NotificationPreferencesRepository(db = db, auth = auth)
                 )
             }
@@ -269,8 +263,6 @@ private fun CristoReyAuthenticatedApp(
     val videosState by viewModel.videosState.collectAsStateWithLifecycle()
     val liveStatus by viewModel.liveStreamStatus.collectAsStateWithLifecycle()
     val isCheckingLive by viewModel.isCheckingLive.collectAsStateWithLifecycle()
-    val socialPostsState by viewModel.socialPostsState.collectAsStateWithLifecycle()
-    val isRefreshingSocial by viewModel.isRefreshingSocial.collectAsStateWithLifecycle()
     val notificationPrefsState by viewModel.notificationPrefsState.collectAsStateWithLifecycle()
     val statusMessage by viewModel.statusMessage.collectAsStateWithLifecycle()
 
@@ -283,7 +275,12 @@ private fun CristoReyAuthenticatedApp(
         }
     }
 
-    BackHandler(enabled = selectedVideoForPlayer != null || selectedTab != CristoReyTab.INICIO) {
+    val fullscreenState = remember { FullscreenPlayerState() }
+
+    BackHandler(
+        enabled = !fullscreenState.isFullscreen &&
+            (selectedVideoForPlayer != null || selectedTab != CristoReyTab.INICIO)
+    ) {
         if (selectedVideoForPlayer != null) {
             selectedVideoForPlayer = null
         } else if (selectedTab != CristoReyTab.INICIO) {
@@ -291,10 +288,11 @@ private fun CristoReyAuthenticatedApp(
         }
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val useNavigationRail = maxWidth >= 600.dp
+    CompositionLocalProvider(LocalFullscreenPlayerState provides fullscreenState) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val useNavigationRail = maxWidth >= 600.dp
 
-        Row(modifier = Modifier.fillMaxSize()) {
+            Row(modifier = Modifier.fillMaxSize()) {
             if (useNavigationRail) {
                 NavigationRail(
                     modifier = Modifier
@@ -411,15 +409,11 @@ private fun CristoReyAuthenticatedApp(
                         CristoReyTab.INICIO -> InicioScreen(
                             liveStatus = liveStatus,
                             videosState = videosState,
-                            socialPostsState = socialPostsState,
                             onNavigateToLive = { selectedTab = CristoReyTab.EN_VIVO },
                             onNavigateToVideos = { selectedTab = CristoReyTab.VIDEOS },
-                            onNavigateToSocial = { selectedTab = CristoReyTab.REDES },
                             onPlayVideo = { video ->
                                 selectedVideoForPlayer = video
-                                selectedTab = CristoReyTab.VIDEOS
-                            },
-                            onOpenUrl = { url -> openExternalUrl(context, url) }
+                            }
                         )
                         CristoReyTab.EN_VIVO -> EnVivoScreen(
                             liveStatus = liveStatus,
@@ -429,16 +423,8 @@ private fun CristoReyAuthenticatedApp(
                         )
                         CristoReyTab.VIDEOS -> VideosScreen(
                             videosState = videosState,
-                            selectedVideo = selectedVideoForPlayer,
                             onSelectVideo = { selectedVideoForPlayer = it },
-                            onRefreshVideos = viewModel::refreshVideos,
-                            onOpenUrl = { url -> openExternalUrl(context, url) }
-                        )
-                        CristoReyTab.REDES -> RedesScreen(
-                            socialPostsState = socialPostsState,
-                            isRefreshing = isRefreshingSocial,
-                            onRefreshSocial = viewModel::refreshSocialFeed,
-                            onOpenUrl = { url -> openExternalUrl(context, url) }
+                            onRefreshVideos = viewModel::refreshVideos
                         )
                         CristoReyTab.INFO -> InfoScreen(
                             userDisplayName = user.displayName,
@@ -452,6 +438,24 @@ private fun CristoReyAuthenticatedApp(
                     }
                 }
             }
+        }
+
+            val activeVideo = selectedVideoForPlayer
+            if (activeVideo != null) {
+                val allVideos = (videosState as? UiState.Success)?.data.orEmpty()
+                val upNext = remember(allVideos, activeVideo.videoId) {
+                    allVideos.filter { it.videoId != activeVideo.videoId }
+                }
+                CristoReyVideoPlayerOverlay(
+                    video = activeVideo,
+                    upNextVideos = upNext,
+                    onSelectVideo = { selectedVideoForPlayer = it },
+                    onOpenExternal = { url -> openExternalUrl(context, url) },
+                    onClose = { selectedVideoForPlayer = null }
+                )
+            }
+
+            FullscreenPlayerOverlay(fullscreenState = fullscreenState)
         }
     }
 }
