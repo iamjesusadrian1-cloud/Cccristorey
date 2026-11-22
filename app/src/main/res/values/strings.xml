@@ -5,7 +5,9 @@
     <string name="tab_live">En Vivo</string>
     <string name="tab_videos">Videos</string>
     <string name="tab_info">Info</string>
-    <string name="welcome_subtitle">Comunidad Cristiana • Fe, Esperanza y Servicio</string>
+    <string name="welcome_subtitle">Comunidad cristiana Cristo Rey</string>
+    <string name="organization_subtitle">Comunidad cristiana Cristo Rey</string>
+    <string name="home_banner_description">Somos una comunidad Apasionada por Dios. Acompaña nuestros Servicios en vivo, congresos, eventos especiales de nuestra iglesia.</string>
     <string name="watch_live_cta">Ver en Vivo</string>
     <string name="watch_on_youtube">Ver en YouTube</string>
     <string name="live_badge_active">EN VIVO</string>

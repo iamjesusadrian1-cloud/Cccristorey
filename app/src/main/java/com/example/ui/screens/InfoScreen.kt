@@ -119,7 +119,7 @@ fun InfoScreen(
             item {
                 SectionHeader(
                     title = "Información y Ajustes",
-                    subtitle = CristoReyConfig.ORGANIZATION_SUBTITLE
+                    subtitle = stringResource(id = R.string.organization_subtitle)
                 )
             }
 

@@ -108,7 +108,7 @@ fun InicioScreen(
                                         color = PureWhite
                                     )
                                     Text(
-                                        text = CristoReyConfig.ORGANIZATION_SUBTITLE,
+                                        text = stringResource(id = R.string.organization_subtitle),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = PureWhite.copy(alpha = 0.82f)
                                     )
@@ -116,7 +116,7 @@ fun InicioScreen(
                             }
 
                             Text(
-                                text = "Unidos en fe, adoración y palabra. Acompaña nuestros cultos en vivo, mensajes recientes y vida comunitaria.",
+                                text = stringResource(id = R.string.home_banner_description),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PureWhite.copy(alpha = 0.9f)
                             )

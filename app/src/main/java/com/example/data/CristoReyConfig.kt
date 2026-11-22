@@ -28,7 +28,7 @@ object CristoReyConfig {
         "https://www.youtube.com/watch?v=$videoId"
 
     // Información institucional de Cristo Rey
-    const val ORGANIZATION_SUBTITLE = "Centro Cristiano Cristo Rey"
+    val ORGANIZATION_SUBTITLE = "Comunidad cristiana Cristo Rey"
     const val CONTACT_EMAIL = "contacto@cccristorey.org"
-    const val WORSHIP_ADDRESS = "Sede Cristo Rey • Consulta nuestras redes para ubicaciones de campus"
+    const val WORSHIP_ADDRESS = "Sede Cristo Rey • Consulta nuestros horarios y eventos especiales"
 }
